@@ -7,8 +7,7 @@ namespace WebApi.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.String)]
-        ObjectId Id { get; set; }
-
+        string Id { get; set; }
         DateTime? CreatedAt { get; }
         DateTime? UpdatedAt { get; set; }
     }

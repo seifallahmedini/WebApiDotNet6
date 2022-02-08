@@ -6,7 +6,6 @@ namespace WebApi.Services.V1
 {
     public interface IUserService
     {
-        AuthenticateResponse Authenticate(AuthenticateRequest model);
         IEnumerable<UserResponse> GetAll();
         UserResponse GetById(string id);
     }

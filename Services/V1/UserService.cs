@@ -11,46 +11,31 @@ using WebApi.Entities;
 using WebApi.Helpers;
 using WebApi.Models;
 using WebApi.Models.Responses;
+using WebApi.Repositories.V1;
 using WebApi.Services.V1;
 
 public class UserService : IUserService
 {
-    // users hardcoded for simplicity, store in a db with hashed passwords in production applications
-    private List<User> _users = new List<User>
-    {
-        new User { FirstName = "Test", LastName = "User", Username = "test", Password = "test" }
-    };
-
     private readonly AppSettings _appSettings;
     private readonly IMapper _mapper;
+    private readonly IUserRepository _userRepository;
 
-    public UserService(IMapper mapper, IOptions<AppSettings> appSettings)
+    public UserService(IMapper mapper, IOptions<AppSettings> appSettings, IUserRepository userRepository)
     {
         _appSettings = appSettings.Value;
         _mapper = mapper;
-    }
-
-    public AuthenticateResponse Authenticate(AuthenticateRequest model)
-    {
-        var user = _users.SingleOrDefault(x => x.Username == model.Username && x.Password == model.Password);
-
-        // return null if user not found
-        if (user == null) return null;
-
-        // authentication successful so generate jwt token
-        var token = generateJwtToken(user);
-
-        return new AuthenticateResponse(user, token);
+        _userRepository = userRepository;
     }
 
     public IEnumerable<UserResponse> GetAll()
     {
-        return _mapper.Map<IEnumerable<UserResponse>>(_users);
+        return _mapper.Map<IEnumerable<UserResponse>>(_userRepository.FindAll());
     }
 
     public UserResponse GetById(string id)
     {
-        return _mapper.Map<UserResponse>(_users.FirstOrDefault(x => x.Id.ToString() == id));
+        var user = _userRepository.FindOne(x => x.Id.Equals(id));
+        return _mapper.Map<UserResponse>(user);
     }
 
     // helper methods

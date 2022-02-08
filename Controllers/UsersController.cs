@@ -17,22 +17,18 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
-    [HttpPost("authenticate")]
-    public IActionResult Authenticate(AuthenticateRequest model)
-    {
-        var response = _userService.Authenticate(model);
-
-        if (response == null)
-            return BadRequest(new { message = "Username or password is incorrect" });
-
-        return Ok(response);
-    }
-
     [Authorize]
     [HttpGet]
     public IActionResult GetAll()
     {
         var users = _userService.GetAll();
+        return Ok(users);
+    }
+
+    [HttpGet("{id:Guid}")]
+    public IActionResult GetById(Guid id)
+    {
+        var users = _userService.GetById(id.ToString());
         return Ok(users);
     }
 }

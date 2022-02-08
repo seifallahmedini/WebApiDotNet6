@@ -1,7 +1,11 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using WebApi.Datas.DbConfigs;
 using WebApi.Helpers;
 using WebApi.Mappings;
+using WebApi.Middlewares;
 using WebApi.Repositories;
 using WebApi.Repositories.V1;
 using WebApi.Services;
@@ -29,10 +33,12 @@ var builder = WebApplication.CreateBuilder(args);
     // configure DI for application repositories
     services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
     services.AddTransient<IDummyRepository, DummyRepository>();
+    services.AddTransient<IUserRepository, UserRepository>();
 
     // configure DI for application services
     services.AddScoped<IDummyService, DummyService>();
     services.AddScoped<IUserService, UserService>();
+    services.AddScoped<IAccountService, AccountService>();
 }
 
 var app = builder.Build();
@@ -45,8 +51,12 @@ var app = builder.Build();
         .AllowAnyMethod()
         .AllowAnyHeader());
 
+    // global error handler
+    app.UseMiddleware<ErrorHandlerMiddleware>();
+
     // custom jwt auth middleware
     app.UseMiddleware<JwtMiddleware>();
+
 
     app.MapControllers();
 }
