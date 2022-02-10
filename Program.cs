@@ -19,6 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
     services.AddCors();
     services.AddControllers();
 
+    services.AddSwaggerGen();
+
     // configure strongly typed settings object
     services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
     // configure mogodb connection string
@@ -39,6 +41,14 @@ var builder = WebApplication.CreateBuilder(args);
     services.AddScoped<IDummyService, DummyService>();
     services.AddScoped<IUserService, UserService>();
     services.AddScoped<IAccountService, AccountService>();
+    services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+    services.AddSingleton<IUriService>(provider =>
+    {
+        var accessor = provider.GetRequiredService<IHttpContextAccessor>();
+        var request = accessor.HttpContext.Request;
+        var absoluteUri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent(), "/");
+        return new UriService(absoluteUri);
+    });
 }
 
 var app = builder.Build();
@@ -56,7 +66,8 @@ var app = builder.Build();
 
     // custom jwt auth middleware
     app.UseMiddleware<JwtMiddleware>();
-
+    app.UseSwagger();
+    app.UseSwaggerUI();
 
     app.MapControllers();
 }

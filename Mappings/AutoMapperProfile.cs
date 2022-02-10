@@ -3,6 +3,7 @@ using WebApi.Entities;
 using WebApi.Entities.V1;
 using WebApi.Models;
 using WebApi.Models.Requests;
+using WebApi.Models.Requests.Queries;
 using WebApi.Models.Responses;
 
 namespace WebApi.Mappings
@@ -20,8 +21,7 @@ namespace WebApi.Mappings
             // From request to domain
             CreateMap<CreateDummyRequest, Dummy>();
             CreateMap<RegisterRequest, User>();
-
-            // From event messge to domain
+            CreateMap<PaginationQuery, PaginationFilter>();
         }
     }
 }

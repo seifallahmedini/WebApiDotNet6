@@ -3,6 +3,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Helpers;
 using WebApi.Models;
+using WebApi.Models.Requests.Queries;
 using WebApi.Services;
 using WebApi.Services.V1;
 
@@ -17,11 +18,10 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
-    [Authorize]
     [HttpGet]
-    public IActionResult GetAll()
+    public IActionResult GetAll([FromQuery] PaginationQuery paginationQuery)
     {
-        var users = _userService.GetAll();
+        var users = _userService.GetAll(paginationQuery);
         return Ok(users);
     }
 

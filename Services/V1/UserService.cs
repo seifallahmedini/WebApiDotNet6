@@ -8,28 +8,54 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using WebApi.Entities;
+using WebApi.Entities.V1;
 using WebApi.Helpers;
 using WebApi.Models;
+using WebApi.Models.Requests.Queries;
 using WebApi.Models.Responses;
 using WebApi.Repositories.V1;
 using WebApi.Services.V1;
+using WebApi.Services.V1.Helpers;
 
 public class UserService : IUserService
 {
+    private static string BASE_URL = "api/1/users";
     private readonly AppSettings _appSettings;
     private readonly IMapper _mapper;
     private readonly IUserRepository _userRepository;
+    private readonly IUriService _uriService;
 
-    public UserService(IMapper mapper, IOptions<AppSettings> appSettings, IUserRepository userRepository)
+    public UserService(
+        IMapper mapper, 
+        IOptions<AppSettings> appSettings, 
+        IUserRepository userRepository, 
+        IUriService uriService)
     {
         _appSettings = appSettings.Value;
         _mapper = mapper;
         _userRepository = userRepository;
+        _uriService = uriService;
     }
 
-    public IEnumerable<UserResponse> GetAll()
+    public PagedResponse<UserResponse> GetAll(PaginationQuery paginationQuery)
     {
-        return _mapper.Map<IEnumerable<UserResponse>>(_userRepository.FindAll());
+        var paginationFilter = _mapper.Map<PaginationFilter>(paginationQuery);
+
+        var users = _userRepository.FindAll();
+
+        // if the paginationFilter is null then return the first page + 10 elements
+        if (paginationFilter == null || paginationFilter.PageNumber < 1 || paginationFilter.PageSize < 1)
+        {
+            var defaultUsers = _mapper.Map<IList<UserResponse>>(users.ToList().OrderBy(x => x.CreatedAt));
+            return (PagedResponse<UserResponse>)PaginationHelpers.CreatePaginatedResponse(BASE_URL, _uriService, paginationQuery, defaultUsers, users.Count());
+        }
+
+        // if the paginationFilter is not null
+        var skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize;
+        var paginatedUsers = users.Skip(skip).Take(paginationFilter.PageSize).OrderBy(x => x.CreatedAt);
+
+        var filteredUsers = _mapper.Map<IList<UserResponse>>(paginatedUsers);
+        return (PagedResponse<UserResponse>)PaginationHelpers.CreatePaginatedResponse(BASE_URL, _uriService, paginationQuery, filteredUsers, users.Count());
     }
 
     public UserResponse GetById(string id)
